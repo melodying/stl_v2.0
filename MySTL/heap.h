@@ -59,17 +59,17 @@ void push_heap(_RandomAccessIter _first, _RandomAccessIter _last)
 }
 
 template<typename _RandomAccessIter, typename _Distance, typename _Tp, typename _Compare>
-void _push_heap(_RandomAccessIter _first, _Distance _holeInsex, _Distance _topIndex,
+void _push_heap(_RandomAccessIter _first, _Distance _holeIndex, _Distance _topIndex,
 				_Tp _val, _Compare _comp)
 {
-	_Distance _parent = (_holeInsex - 1) / 2;
-	while (_holeInsex > _topIndex && _comp(*(_first + _parent), _val))
+	_Distance _parent = (_holeIndex - 1) / 2;
+	while (_holeIndex > _topIndex && _comp(*(_first + _parent), _val))
 	{
-		*(_first + _holeInsex) = *(_first + _parent);
-		_holeInsex = _parent;
-		_parent = (_holeInsex - 1) / 2;
+		*(_first + _holeIndex) = *(_first + _parent);
+		_holeIndex = _parent;
+		_parent = (_holeIndex - 1) / 2;
 	}
-	*(_first + _holeInsex) = _val;
+	*(_first + _holeIndex) = _val;
 }
 
 template<typename _RandomAccessIter, typename _Distance, typename _Tp, typename _Compare>

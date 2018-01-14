@@ -30,6 +30,8 @@
 
 #include "config.h"
 #include "deque.h"
+#include "function.h"
+#include "heap.h"
 
 NAMESPACE_BEGIN
 
@@ -130,6 +132,76 @@ bool operator>=(const queue<_Tp, _Sequence>& _x, const queue<_Tp, _Sequence>& _y
 {
 	return !(_x < _y);
 }
+
+
+
+template<typename _Tp, typename _Sequence = vector<_Tp>, typename _Compare = less<_Tp> >
+class priority_queue
+{
+public:
+	typedef typename _Sequence::value_type      value_type;
+	typedef typename _Sequence::size_type       size_type;
+	typedef          _Sequence                  container_type;
+
+	typedef typename _Sequence::reference       reference;
+	typedef typename _Sequence::const_reference const_reference;
+
+protected:
+	_Sequence c;
+	_Compare comp;
+public:
+	priority_queue() : c() {}
+	explicit priority_queue(const _Compare& __x) : c(), comp(__x) {}
+
+	priority_queue(const _Compare& _x, const _Sequence& _s) : c(_s), comp(_x)
+	{
+		make_heap(c.begin(), c.end(), comp);
+	}
+
+	priority_queue(const value_type* _first, const value_type* _last) : c(_first, _last) 
+	{
+		make_heap(c.begin(), c.end(), comp);
+	}
+
+	priority_queue(const value_type* _first, const value_type* _last,
+		const _Compare& _x) : c(_first, _last), comp(_x)
+	{
+		make_heap(c.begin(), c.end(), comp);
+	}
+
+	priority_queue(const value_type* _first, const value_type* _last,
+		const _Compare& _x, const _Sequence& _c) : c(_c), comp(_x)
+	{
+		c.insert(c.end(), _first, _last);
+		make_heap(c.begin(), c.end(), comp);
+	}
+
+	bool empty() const
+	{
+		return c.empty();
+	}
+	size_type size() const
+	{
+		return c.size();
+	}
+	const_reference top() const
+	{
+		return c.front();
+	}
+	void push(const value_type& _x)
+	{
+		c.push_back(_x);
+		push_heap(c.begin(), c.end(), comp);
+	}
+	void pop()
+	{
+		pop_heap(c.begin(), c.end(), comp);
+		c.pop_back();	
+	}
+};
+
+
+
 
 
 NAMESPACE_END

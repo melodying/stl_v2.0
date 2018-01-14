@@ -114,7 +114,7 @@ inline _Tp*
 _copy_trivial(const _Tp* _first, const _Tp* _last, _Tp* _result)
 {
 	memmove(_result, _first, sizeof(_Tp) * (_last - _first));
-	return _result;
+	return _result + (_last - _first);
 }
 
 template <typename _InputIter, typename _OutputIter, typename _BoolType>

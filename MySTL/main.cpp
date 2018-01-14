@@ -9,6 +9,7 @@
 #include "map.h"
 
 #include <stdio.h>
+#include <queue>
 #include <vector>
 #include <map>
 #include <algorithm>
@@ -54,6 +55,59 @@ private:
 };
 
 
+void VectorTest()
+{
+	// 自定义的类类型
+	int arr[5] = { 1, 2, 3, 4, 5 };
+	Test test;
+	test.SetData(arr, 5);
+	BA::vector<Test> vecTest;
+	for (int i = 0; i < 10; ++i)
+	{
+		vecTest.push_back(test);
+	}
+
+	for (auto value : vecTest)
+	{
+		value.Print();
+	}
+
+	auto it1 = vecTest.begin();
+	it1 = vecTest.end();
+	auto it2 = vecTest.rend();
+	it2 = vecTest.rbegin();
+
+	vecTest.size();
+	vecTest.resize(10);
+	vecTest.capacity();
+	vecTest.empty();
+	vecTest.reserve(20);
+	vecTest[2].Print();
+	vecTest.front();
+	vecTest.back();
+	vecTest.pop_back();
+
+	// TODO: 插入之后迭代器可能失效. 不能直接用之前的迭代器. 
+	// 连续的插入操作最好别用同一个迭代器来控制.因为进行插入操作的时候可能导致空间重新分配. 迭代器会失效
+	/*it1 = vecTest.begin();
+	vecTest.insert(it1 + 2, test);
+	vecTest.insert(it1 + 3, 3, test);
+	vecTest.insert(it1 + 1, vecTest.begin(), vecTest.end());*/
+
+	it1 = vecTest.begin();
+	vecTest.erase(it1 + 2);
+	vecTest.erase(it1 + 2, it1 + 3);
+
+	BA::vector<Test> vec;
+	vecTest.swap(vec);
+
+	for (auto it = vec.begin(); it != vec.end(); ++it)
+	{
+		it->Print();
+	}
+
+	vec.clear();
+}
 
 void ListTest()
 {
@@ -134,60 +188,6 @@ void ListTest()
 
 }
 
-void VectorTest()
-{
-	// 自定义的类类型
-	int arr[5] = { 1, 2, 3, 4, 5 };
-	Test test;
-	test.SetData(arr, 5);
-	BA::vector<Test> vecTest;
-	for (int i = 0; i < 10; ++i)
-	{
-		vecTest.push_back(test);
-	}
-
-	for (auto value : vecTest)
-	{
-		value.Print();
-	}
-
-	auto it1 = vecTest.begin();
-	it1 = vecTest.end();
-	auto it2 = vecTest.rend();
-	it2 = vecTest.rbegin();
-
-	vecTest.size();
-	vecTest.resize(10);
-	vecTest.capacity();
-	vecTest.empty();
-	vecTest.reserve(20);
-	vecTest[2].Print();
-	vecTest.front();
-	vecTest.back();
-	vecTest.pop_back();
-
-	// TODO: 插入之后迭代器可能失效. 不能直接用之前的迭代器. 
-	// 连续的插入操作最好别用同一个迭代器来控制.因为进行插入操作的时候可能导致空间重新分配. 迭代器会失效
-	/*it1 = vecTest.begin();
-	vecTest.insert(it1 + 2, test);
-	vecTest.insert(it1 + 3, 3, test);
-	vecTest.insert(it1 + 1, vecTest.begin(), vecTest.end());*/
-	
-	it1 = vecTest.begin();
-	vecTest.erase(it1 + 2);
-	vecTest.erase(it1 + 2, it1 + 3);
-
-	BA::vector<Test> vec;
-	vecTest.swap(vec);
-
-	for (auto it = vec.begin(); it != vec.end(); ++it)
-	{
-		it->Print();
-	}
-
-	vec.clear();
-}
-
 void DequeTest()
 {
 	Test test;
@@ -218,7 +218,6 @@ void DequeTest()
 	deque.insert(deque.begin(), it,it + 1);
 	deque.insert(deque.begin(), deque.begin(), deque.end());
 }
-
 
 void StackTest()
 {
@@ -258,6 +257,20 @@ void QueueTest()
 		
 	}
 	
+}
+
+void PriorityQueueTest()
+{
+	BA::priority_queue<int> pq;
+	pq.push(3);
+	pq.push(1);
+	pq.push(5);
+	pq.push(2);
+	int len = pq.size();
+	int top = pq.top();
+	pq.pop();
+	top = pq.top();
+
 }
 
 
@@ -320,5 +333,10 @@ int main()
 	VectorTest();
 	ListTest();
 	DequeTest();
+	StackTest();
+	QueueTest();
+	PriorityQueueTest();
+
+	
 	return 0;
 }
