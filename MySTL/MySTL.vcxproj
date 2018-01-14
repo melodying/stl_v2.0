@@ -113,8 +113,26 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="algobase.h" />
+    <ClInclude Include="algorithm.h" />
     <ClInclude Include="alloc.h" />
     <ClInclude Include="config.h" />
+    <ClInclude Include="construct.h" />
+    <ClInclude Include="deque.h" />
+    <ClInclude Include="function.h" />
+    <ClInclude Include="heap.h" />
+    <ClInclude Include="iterator.h" />
+    <ClInclude Include="iterator_base.h" />
+    <ClInclude Include="list.h" />
+    <ClInclude Include="map.h" />
+    <ClInclude Include="pair.h" />
+    <ClInclude Include="queue.h" />
+    <ClInclude Include="set.h" />
+    <ClInclude Include="stack.h" />
+    <ClInclude Include="tempbuf.h" />
+    <ClInclude Include="tree.h" />
+    <ClInclude Include="type_traits.h" />
+    <ClInclude Include="uninitialized.h" />
     <ClInclude Include="vector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
