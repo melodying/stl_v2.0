@@ -1,3 +1,4 @@
+
 /*
 *
 * Copyright (c) 1994
@@ -12,7 +13,7 @@
 * purpose.  It is provided "as is" without express or implied warranty.
 *
 *
-* Copyright (c) 1996-1998
+* Copyright (c) 1996
 * Silicon Graphics Computer Systems, Inc.
 *
 * Permission to use, copy, modify, distribute and sell this software
@@ -24,45 +25,43 @@
 * purpose.  It is provided "as is" without express or implied warranty.
 */
 
-
-#ifndef _SET_H_
-#define _SET_H_
+#ifndef _MULTISET_H_
+#define _MULTISET_H_
 
 #include "config.h"
 #include "function.h"
-#include "alloc.h"
 #include "tree.h"
-
 
 NAMESPACE_BEGIN
 
+
 template<typename _Key, typename _Compare = less<_Key>, typename _Alloc = alloc>
-class set;
+class multiset;
 
 template <class _Key, class _Compare, class _Alloc>
-inline bool operator==(const set<_Key, _Compare, _Alloc>& _x,
-	const set<_Key, _Compare, _Alloc>& _y);
+inline bool operator==(const multiset<_Key, _Compare, _Alloc>& _x,
+					   const multiset<_Key, _Compare, _Alloc>& _y);
 
 template <class _Key, class _Compare, class _Alloc>
-inline bool operator<(const set<_Key, _Compare, _Alloc>& _x,
-	const set<_Key, _Compare, _Alloc>& _y);
+inline bool operator<(const multiset<_Key, _Compare, _Alloc>& _x,
+					  const multiset<_Key, _Compare, _Alloc>& _y);
+
 
 template<typename _Key, typename _Compare, typename _Alloc>
-class set
+class multiset
 {
 public:
 	typedef _Key key_type;
 	typedef _Key value_type;
 	typedef _Compare key_compare;
 	typedef _Compare value_compare;
-
 private:
-	typedef _Rb_tree<key_type, value_type, _Identity<value_type>, key_compare, _Alloc> _Rep_type;
-	_Rep_type _m_tree;
+	typedef _Rb_tree<key_type, value_type, 
+		_Identity<value_type>, key_compare, _Alloc> _Rep_type;
 
+	_Rep_type _m_tree;
 	typedef typename _Rep_type::iterator _Rep_iterator;
 public:
-	// 定义成const防止用户进行任意写入
 	typedef typename _Rep_type::const_pointer pointer;
 	typedef typename _Rep_type::const_pointer const_pointer;
 	typedef typename _Rep_type::const_reference reference;
@@ -80,33 +79,36 @@ public:
 		return _m_tree.get_allocator();
 	}
 
-	set():_m_tree(_Compare(), allocator_type()){}
-	explicit set(const _Compare &_comp, const allocator_type &_a = allocator_type()) : _m_tree(_comp, _a){}
-	set(const value_type *_first, const value_type *_last) :_m_tree(_Compare(), allocator_type())
+	multiset() :_m_tree(_Compare(), allocator_type()) {}
+	explicit multiset(const _Compare &_comp, const allocator_type &_a = allocator_type()) 
+				: _m_tree(_comp, _a) {}
+
+	multiset(const value_type *_first, const value_type *_last) :_m_tree(_Compare(), allocator_type())
 	{
-		_m_tree.insert_unique(_first, _last);
+		_m_tree.insert_equal(_first, _last);
 	}
-	set(const value_type *_first, const value_type *_last, const _Compare &_comp, 
-			const allocator_type&_a = allocator_type()):_m_tree(_comp, _a)
+	multiset(const value_type *_first, const value_type *_last, const _Compare &_comp,
+		const allocator_type&_a = allocator_type()) :_m_tree(_comp, _a)
 	{
-		_m_tree.insert_unique(_first, _last);
+		_m_tree.insert_equal(_first, _last);
 	}
-	set(const_iterator _first, const_iterator _last) :_m_tree(_Compare(), allocator_type())
+	multiset(const_iterator _first, const_iterator _last) :_m_tree(_Compare(), allocator_type())
 	{
-		_m_tree.insert_unique(_first, _last);
+		_m_tree.insert_equal(_first, _last);
 	}
-	set(const_iterator _first, const_iterator _last, const _Compare &_comp, 
-			const allocator_type &_a = allocator_type()) :_m_tree(_comp, _a)
+	multiset(const_iterator _first, const_iterator _last, const _Compare &_comp,
+		const allocator_type &_a = allocator_type()) :_m_tree(_comp, _a)
 	{
-		_m_tree.insert_unique(_first, _last);
+		_m_tree.insert_equal(_first, _last);
 	}
-	set(const set<_Key, _Compare, _Alloc> &_x):_m_tree(_x._m_tree){}
-	set<_Key,_Compare,_Alloc>& operator=(const set<_Key,_Compare, _Alloc> &_x)
+	multiset(const multiset<_Key, _Compare, _Alloc> &_x) :_m_tree(_x._m_tree) {}
+
+	multiset<_Key, _Compare, _Alloc>& operator=(const multiset<_Key, _Compare, _Alloc> &_x)
 	{
 		_m_tree = _x._m_tree;
 		return *this;
 	}
-public:
+
 	key_compare key_comp()const
 	{
 		return _m_tree.key_comp();
@@ -142,29 +144,29 @@ public:
 		return _m_tree.max_size();
 	}
 
-	void swap(set<_Key, _Compare, _Alloc> &_x)
+	void swap(multiset<_Key, _Compare, _Alloc> &_x)
 	{
 		_m_tree.swap(_x._m_tree);
 	}
 
-	pair<iterator, bool> insert(const value_type &_val)
+	iterator insert(const value_type &_val)
 	{
-		pair<typename _Rep_type::iterator, bool> _p = _m_tree.insert_unique(_val);
-		return pair<iterator, bool>(_p.first, _p.second);
+		return _m_tree.insert_equal(_val);
 	}
 
-	iterator insert(iterator _position, const value_type &_x)
+	iterator insert(iterator _position, const value_type &_val)
 	{
-		return _m_tree.insert_unique((_Rep_iterator&)_position, _x);
+		return _m_tree.insert_equal((_Rep_iterator&)_position, _val);
+	}
+
+	void insert(const value_type *_first, const value_type *_last)
+	{
+		_m_tree.insert_equal(_first, _last);
 	}
 
 	void insert(const_iterator _first, const_iterator _last)
 	{
-		_m_tree.insert_unique(_first, _last);
-	}
-	void insert(const value_type *_first, const value_type *_last)
-	{
-		_m_tree.insert_unique(_first, _last);
+		_m_tree.insert_equal(_first, _last);
 	}
 
 	void erase(iterator _position)
@@ -211,49 +213,51 @@ public:
 		return _m_tree.equal_range(_x);
 	}
 
-	friend bool operator==(const set&, const set&);
-	friend bool operator<(const set&, const set&);
+	friend bool operator==(const multiset&, const multiset&);
+	friend bool operator<(const multiset&, const multiset&);
 };
 
 template <class _Key, class _Compare, class _Alloc>
-inline bool operator==(const set<_Key, _Compare, _Alloc>& _x,
-	const set<_Key, _Compare, _Alloc>& _y)
+inline bool operator==(const multiset<_Key, _Compare, _Alloc>& _x,
+	const multiset<_Key, _Compare, _Alloc>& _y)
 {
 	return _x._m_tree == _y._m_tree;
 }
 
 template <class _Key, class _Compare, class _Alloc>
-inline bool operator<(const set<_Key, _Compare, _Alloc>& _x,
-	const set<_Key, _Compare, _Alloc>& _y)
+inline bool operator<(const multiset<_Key, _Compare, _Alloc>& _x,
+	const multiset<_Key, _Compare, _Alloc>& _y)
 {
 	return _x._m_tree < _y._m_tree;
 }
 
 template <class _Key, class _Compare, class _Alloc>
-inline bool operator!=(const set<_Key, _Compare, _Alloc>& _x,
-	const set<_Key, _Compare, _Alloc>& _y) {
+inline bool operator!=(const multiset<_Key, _Compare, _Alloc>& _x,
+	const multiset<_Key, _Compare, _Alloc>& _y) {
 	return !(_x == _y);
 }
 
 template <class _Key, class _Compare, class _Alloc>
-inline bool operator>(const set<_Key, _Compare, _Alloc>& _x,
-	const set<_Key, _Compare, _Alloc>& _y) {
+inline bool operator>(const multiset<_Key, _Compare, _Alloc>& _x,
+	const multiset<_Key, _Compare, _Alloc>& _y) {
 	return _y < _x;
 }
 
 template <class _Key, class _Compare, class _Alloc>
-inline bool operator<=(const set<_Key, _Compare, _Alloc>& _x,
-	const set<_Key, _Compare, _Alloc>& _y) {
+inline bool operator<=(const multiset<_Key, _Compare, _Alloc>& _x,
+	const multiset<_Key, _Compare, _Alloc>& _y) {
 	return !(_y < _x);
 }
 
 template <class _Key, class _Compare, class _Alloc>
-inline bool operator>=(const set<_Key, _Compare, _Alloc>& _x,
-	const set<_Key, _Compare, _Alloc>& _y) {
+inline bool operator>=(const multiset<_Key, _Compare, _Alloc>& _x,
+	const multiset<_Key, _Compare, _Alloc>& _y) {
 	return !(_x < _y);
 }
 
 
+
+
 NAMESPACE_END
 
-#endif//!_SET_H_
+#endif//_MULTISET_H_

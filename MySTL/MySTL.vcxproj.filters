@@ -83,5 +83,11 @@
     <ClInclude Include="tempbuf.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="multiset.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="multimap.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

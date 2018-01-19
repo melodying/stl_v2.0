@@ -7,13 +7,11 @@
 #include "tree.h"
 #include "set.h"
 #include "map.h"
-
-#include <stdio.h>
-#include <queue>
-#include <vector>
-#include <map>
-#include <algorithm>
 #include "algorithm.h"
+#include <stdio.h>
+#include <string>
+#include "multiset.h"
+
 
 class Test
 {
@@ -190,6 +188,8 @@ void ListTest()
 
 void DequeTest()
 {
+	printf("----------DequeTest-----------");
+
 	Test test;
 	Test t1[10];
 	int arr[5] = { 1,2,3,4,5 };
@@ -221,6 +221,8 @@ void DequeTest()
 
 void StackTest()
 {
+	printf("----------StackTest-----------");
+
 	BA::stack<int> s;
 	BA::stack<int> s1;
 	s.push(1);
@@ -240,6 +242,8 @@ void StackTest()
 
 void QueueTest()
 {
+	printf("----------QueueTest-----------");
+
 	BA::queue<int> s;
 	BA::queue<int> s1;
 	s.push(1);
@@ -261,6 +265,7 @@ void QueueTest()
 
 void PriorityQueueTest()
 {
+	printf("----------PriorityQueueTest-----------");
 	BA::priority_queue<int> pq;
 	pq.push(3);
 	pq.push(1);
@@ -273,33 +278,65 @@ void PriorityQueueTest()
 
 }
 
-
-void setTest()
+void RBTreeTest()
 {
-	Test test[5];
-	int arr[5] = { 1,2,3,4,5 };
-	for (int i = 0; i < 5; ++i)
-	{
-		Test tmp;
-		tmp.SetData(arr, 5);
-		test[i] = tmp;
-	}
-	
-	BA::set<Test> s;
-	s.begin();
-	s.end();
-	s.clear();
-	for (int i = 0; i < 5; ++i)
-	{
-		s.insert(test[i]);
-	}
+	printf("----------RBTreeTest-----------");
+	BA::_Rb_tree<int, int, BA::identity<int> , BA::greater<int> > tree1;
+	tree1.insert_unique(30);
+	tree1.insert_unique(15);
+	tree1.insert_unique(70);
+	tree1.insert_unique(10);
+	tree1.insert_unique(20);
+	tree1.insert_unique(5);
+	tree1.insert_unique(8);
 
-	printf("%d\n", s.count(test[2]));
+	for (auto val : tree1)
+	{
+		printf("%d", val);
+	}
+	auto it = tree1.find(1);
+	const auto it1 = tree1.find(1);
+
+	BA::_Rb_tree<int, int, BA::identity<int>, BA::less<int> > tree2;
+	tree2.insert_equal(30);
+	tree2.insert_equal(15);
+	int count = tree2.count(10);
+	tree2.equal_range(10);
+	tree2.erase(tree2.begin());
+	it = tree2.find(15);
+	tree2.clear();
 	
 }
 
-void mapTest()
+void SetTest()
 {
+	printf("----------set-----------");
+	int arr[5] = { 0,1, 2,3,4 };
+	BA::set<int> s(arr, arr + 5);
+
+	printf("size = %d\n", s.size());
+	printf("3 count = %d\n", s.count(3));
+	s.insert(3);
+	printf("size = %d\n", s.size());
+	printf("3 count = %d\n", s.count(3));
+	s.insert(5);
+	s.erase(1);
+	for (auto it = s.begin(); it != s.end(); ++it)
+		printf("%d ", *it);
+
+	auto it1 = BA::find(s.begin(), s.end(), 3);
+	if (it1 != s.end())
+		printf("\n%d\n", *it1);
+
+	it1 = s.find(3);
+	if (it1 != s.end())
+		printf("\n%d\n", *it1);
+	
+}
+
+void MapTest()
+{
+	printf("----------map-----------\n");
 	Test test[5];
 	int arr[5] = { 1,2,3,4,5 };
 	for (int i = 0; i < 5; ++i)
@@ -314,29 +351,92 @@ void mapTest()
 	for (int i = 0; i < 5; ++i)
 	{
 		const char c = i + '0';
-		// TODO: map的插入bug。又一个由const引发的错误
+		// map的插入bug。一个由const引发的错误
 		// 在map中的value_type的key应为const。因为构造的pair中的key并不是const。造成无法插入
 		// 如果将构造的pair中的first_type设置为const。make_pair()无法工作
 		// 如果使用pair的拷贝构造则没有问题。问题应该是出在const的成员变量只能初始化。无法赋值
 		
 		// 需要手动构造const first_type的pair。使用起来不够友好
+		// 解决方法是需要在pair进行转换构造. 
 		BA::pair<const char, Test> pair(c, test[i]);
 		
 		m.insert(pair);
 	}
 
 	m['0'].Print();
+
+	BA::map<std::string, int> map;
+	map["aaa"] = 1;
+	map["bbb"] = 2;
+	map["ccc"] = 3;
+	BA::pair<std::string, int> value("ddd", 5);
+	map.insert(value);
+
+	auto it = map.begin();
+	for (; it != map.end(); ++it)
+		printf("%s %d\n", it->first.c_str(), it->second);
+
+	int num = map["aaa"];
 }
 
+void MultiSetTest()
+{
+	printf("----------multiset-----------\n");
+	int arr[5] = { 0,1, 2,3,4 };
+	BA::multiset<int> s(arr, arr + 5);
+
+	printf("size = %d\n", s.size());
+	printf("3 count = %d\n", s.count(3));
+	s.insert(3);
+	printf("size = %d\n", s.size());
+	printf("3 count = %d\n", s.count(3));
+	s.insert(5);
+	s.erase(1);
+	s.insert(s.begin(), 4);
+	for (auto it = s.begin(); it != s.end(); ++it)
+		printf("%d ", *it);
+
+	auto it1 = BA::find(s.begin(), s.end(), 3);
+	if (it1 != s.end())
+		printf("\n%d\n", *it1);
+
+	it1 = s.find(3);
+	if (it1 != s.end())
+		printf("\n%d\n", *it1);
+
+
+
+
+}
+
+void MultiMapTest()
+{
+	printf("----------map-----------\n");
+
+	BA::map<std::string, int> map;
+	map["aaa"] = 1;
+	map["bbb"] = 2;
+	map["ccc"] = 3;
+	BA::pair<std::string, int> value("ddd", 5);
+	map.insert(value);
+
+	auto it = map.begin();
+	for (; it != map.end(); ++it)
+		printf("%s %d\n", it->first.c_str(), it->second);
+
+	int num = map["aaa"];
+}
 int main()
 {
-	VectorTest();
+	/*VectorTest();
 	ListTest();
 	DequeTest();
 	StackTest();
 	QueueTest();
 	PriorityQueueTest();
-
-	
+	RBTreeTest();*/
+	//SetTest();
+	//MapTest();
+	MultiSetTest();
 	return 0;
 }

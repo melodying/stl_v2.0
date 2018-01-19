@@ -25,31 +25,30 @@
 */
 
 
-#ifndef _MAP_H_
-#define _MAP_H_
+#ifndef _MULTIMAP_H_
+#define _MULTIMAP_H_
 
 #include "config.h"
 #include "function.h"
-#include "alloc.h"
 #include "pair.h"
 #include "tree.h"
 
 NAMESPACE_BEGIN
 
 template<typename _Key, typename _Tp, typename _Compare = less<_Key>, typename _Alloc = alloc>
-class map;
+class multimap;
 
 template <class _Key, class _Tp, class _Compare, class _Alloc>
-inline bool operator==(const map<_Key, _Tp, _Compare, _Alloc>& _x,
-	const map<_Key, _Tp, _Compare, _Alloc>& _y);
+inline bool operator==(const multimap<_Key, _Tp, _Compare, _Alloc>& _x,
+	const multimap<_Key, _Tp, _Compare, _Alloc>& _y);
 
 template <class _Key, class _Tp, class _Compare, class _Alloc>
-inline bool operator<(const map<_Key, _Tp, _Compare, _Alloc>& _x,
-	const map<_Key, _Tp, _Compare, _Alloc>& _y);
+inline bool operator<(const multimap<_Key, _Tp, _Compare, _Alloc>& _x,
+	const multimap<_Key, _Tp, _Compare, _Alloc>& _y);
 
 
 template<typename _Key, typename _Tp, typename _Compare, typename _Alloc>
-class map
+class multimap
 {
 public:
 	typedef _Key key_type;
@@ -58,12 +57,12 @@ public:
 	typedef pair<const _Key, _Tp> value_type;// 键值不可修改.
 	typedef _Compare key_compare;
 
-	class value_compare:public binary_function<value_type, value_type, bool>
+	class value_compare :public binary_function<value_type, value_type, bool>
 	{
-		friend class map<_Key, _Tp, _Compare, _Alloc>;
+		friend class multimap<_Key, _Tp, _Compare, _Alloc>;
 	protected:
 		_Compare _comp;
-		value_compare(_Compare _c) :_comp(_c){}
+		value_compare(_Compare _c) :_comp(_c) {}
 	public:
 		bool operator()(const value_type &_x, const value_type &_y)const
 		{
@@ -93,31 +92,31 @@ public:
 		return _m_tree.get_allocator();
 	}
 
-	map():_m_tree(_Compare(), allocator_type()){}
-	explicit map(const _Compare &_comp,
-		const allocator_type& _a = allocator_type()):_m_tree(_comp, _a){}
-	map(const value_type *_first, const value_type *_last):_m_tree(_Compare(), allocator_type())
+	multimap() :_m_tree(_Compare(), allocator_type()) {}
+	explicit multimap(const _Compare &_comp,
+		const allocator_type& _a = allocator_type()) :_m_tree(_comp, _a) {}
+	multimap(const value_type *_first, const value_type *_last) :_m_tree(_Compare(), allocator_type())
 	{
 		_m_tree.insert_unique(_first, _last);
 	}
-	map(const value_type *_first, const value_type *_last, _Compare &_comp,
+	multimap(const value_type *_first, const value_type *_last, _Compare &_comp,
 		const allocator_type &_a = allocator_type()) :_m_tree(_comp, _a)
 	{
 		_m_tree.insert_unique(_first, _last);
 	}
 
-	map(const_iterator _first, const_iterator _last) :_m_tree(_Compare(), allocator_type())
+	multimap(const_iterator _first, const_iterator _last) :_m_tree(_Compare(), allocator_type())
 	{
 		_m_tree.insert_unique(_first, _last);
 	}
-	map(const_iterator _first, const_iterator _last, _Compare &_comp,
-		 const allocator_type &_a = allocator_type()) :_m_tree(_comp, _a)
+	multimap(const_iterator _first, const_iterator _last, _Compare &_comp,
+		const allocator_type &_a = allocator_type()) :_m_tree(_comp, _a)
 	{
 		_m_tree.insert_unique(_first, _last);
 	}
 
-	map(const map<_Key, _Tp, _Compare, _Alloc> &_x):_m_tree(_x._m_tree){}
-	map<_Key, _Tp, _Compare, _Alloc> &operator=(const map<_Key, _Tp, _Compare, _Alloc> &_x)
+	multimap(const multimap<_Key, _Tp, _Compare, _Alloc> &_x) :_m_tree(_x._m_tree) {}
+	multimap<_Key, _Tp, _Compare, _Alloc> &operator=(const multimap<_Key, _Tp, _Compare, _Alloc> &_x)
 	{
 		_m_tree = _x._m_tree;
 		return *this;
@@ -152,23 +151,6 @@ public:
 		return _m_tree.end();
 	}
 
-	reverse_iterator rbegin()
-	{
-		return _m_tree.rbegin();
-	}
-	const_reverse_iterator rbegin() const
-	{
-		return _m_tree.rbegin();
-	}
-	reverse_iterator rend()
-	{
-		return _m_tree.rend();
-	}
-	const_reverse_iterator rend() const
-	{
-		return _m_tree.rend();
-	}
-
 	bool empty()const
 	{
 		return _m_tree.empty();
@@ -194,39 +176,37 @@ public:
 		return (*_it).second;
 	}
 
-	pair<iterator, bool> insert(const value_type &_val)
+	iterator insert(const value_type &_val)
 	{
-		return _m_tree.insert_unique(_val);
+		return _m_tree.insert_equal(_val);
 	}
 
 	iterator insert(iterator _position, const value_type &_val)
 	{
-		return _m_tree.insert_unique(_position, _val);
+		return _m_tree.insert_equal(_position, _val);
 	}
 
 	void insert(const value_type *_first, const value_type *_last)
 	{
-		_m_tree.insert_unique(_first, _last);
+		_m_tree.insert_equal(_first, _last);
 	}
 
 	void insert(const_iterator _first, const_iterator _last)
 	{
-		_m_tree.insert_unique(_first, _last);
-	}
-
-	void erase(iterator _first, iterator _last)
-	{
-		_m_tree.erase(_first, _last);
-	}
-
-	size_type erase(const key_type& _x)
-	{
-		return _m_tree.erase(_x);
+		_m_tree.insert_equal(_first, _last);
 	}
 
 	void erase(iterator _position)
 	{
 		_m_tree.erase(_position);
+	}
+	void erase(iterator _first, iterator _last)
+	{
+		_m_tree.erase(_first, _last);
+	}
+	size_type erase(const key_type &_x)
+	{
+		return _m_tree.erase(_x);
 	}
 
 	void clear()
@@ -275,49 +255,49 @@ public:
 		return _m_tree.equal_range(_key);
 	}
 
-	friend bool operator==(const map&, const map&);
-	friend bool operator<(const map&, const map&);
+	friend bool operator==(const multimap&, const multimap&);
+	friend bool operator<(const multimap&, const multimap&);
 };
 
 
 template <class _Key, class _Tp, class _Compare, class _Alloc>
-inline bool operator==(const map<_Key, _Tp, _Compare, _Alloc>& _x,
-	const map<_Key, _Tp, _Compare, _Alloc>& _y)
+inline bool operator==(const multimap<_Key, _Tp, _Compare, _Alloc>& _x,
+	const multimap<_Key, _Tp, _Compare, _Alloc>& _y)
 {
 	return _x._m_tree == _y._m_tree;
 }
 
 template <class _Key, class _Tp, class _Compare, class _Alloc>
-inline bool operator<(const map<_Key, _Tp, _Compare, _Alloc>& _x,
-	const map<_Key, _Tp, _Compare, _Alloc>& _y)
+inline bool operator<(const multimap<_Key, _Tp, _Compare, _Alloc>& _x,
+	const multimap<_Key, _Tp, _Compare, _Alloc>& _y)
 {
 	return _x._m_tree < _y._m_tree;
 }
 
 template <class _Key, class _Tp, class _Compare, class _Alloc>
-inline bool operator!=(const map<_Key, _Tp, _Compare, _Alloc>& _x,
-	const map<_Key, _Tp, _Compare, _Alloc>& _y)
+inline bool operator!=(const multimap<_Key, _Tp, _Compare, _Alloc>& _x,
+	const multimap<_Key, _Tp, _Compare, _Alloc>& _y)
 {
 	return !(_x == _y);
 }
 
 template <class _Key, class _Tp, class _Compare, class _Alloc>
-inline bool operator>(const map<_Key, _Tp, _Compare, _Alloc>& _x,
-	const map<_Key, _Tp, _Compare, _Alloc>& _y)
+inline bool operator>(const multimap<_Key, _Tp, _Compare, _Alloc>& _x,
+	const multimap<_Key, _Tp, _Compare, _Alloc>& _y)
 {
 	return _y < _x;
 }
 
 template <class _Key, class _Tp, class _Compare, class _Alloc>
-inline bool operator<=(const map<_Key, _Tp, _Compare, _Alloc>& _x,
-	const map<_Key, _Tp, _Compare, _Alloc>& _y)
+inline bool operator<=(const multimap<_Key, _Tp, _Compare, _Alloc>& _x,
+	const multimap<_Key, _Tp, _Compare, _Alloc>& _y)
 {
 	return !(_y < _x);
 }
 
 template <class _Key, class _Tp, class _Compare, class _Alloc>
-inline bool operator>=(const map<_Key, _Tp, _Compare, _Alloc>& _x,
-	const map<_Key, _Tp, _Compare, _Alloc>& _y)
+inline bool operator>=(const multimap<_Key, _Tp, _Compare, _Alloc>& _x,
+	const multimap<_Key, _Tp, _Compare, _Alloc>& _y)
 {
 	return !(_x < _y);
 }
@@ -328,3 +308,5 @@ inline bool operator>=(const map<_Key, _Tp, _Compare, _Alloc>& _x,
 NAMESPACE_END
 
 #endif//!_MAP_H_
+
+#endif//!_MULTIMAP_H_

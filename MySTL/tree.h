@@ -54,6 +54,7 @@ struct _Rb_tree_node_base
 	_Base_ptr _m_left;
 	_Base_ptr _m_right;
 
+	// 最小值为根节点往左子树走到底
 	static _Base_ptr _S_minimum(_Base_ptr _x)
 	{
 		while (_x->_m_left != nullptr)
@@ -62,6 +63,7 @@ struct _Rb_tree_node_base
 		return _x;
 	}
 
+	// 最大值为根节点往右子数走到底
 	static _Base_ptr _S_maximum(_Base_ptr _x)
 	{
 		while (_x->_m_right)
@@ -74,16 +76,23 @@ struct _Rb_tree_node_base
 template<typename _Value>
 struct _Rb_tree_node : public _Rb_tree_node_base
 {
-	typedef _Rb_tree_node<_Value>*	_Link_type;
-	_Value _m_value_field;
+	typedef _Rb_tree_node<_Value>* _Link_type;
+	_Value _m_value_field;				// 节点的值
 };
 
 struct _Rb_tree_base_iterator
 {
-	typedef _Rb_tree_node_base::_Base_ptr _Base_ptr;
+	typedef _Rb_tree_node_base::_Base_ptr   _Base_ptr;
+	typedef bidirectional_iterator_tag      iterator_category;
+	typedef ptrdiff_t difference_type;
 
 	_Base_ptr _m_node;
 
+	// 只被迭代器的op++所调用, 其作用主要用来遍历元素. 
+	// 对于相同的元素根据传入tree中的比较方式不同, 得到的结果也不相同
+	// 如传递less方法. op++相当于从小到大的访问节点
+	// 同理, 传递greater方法, 则是从大到小的访问节点
+	// 因为不同的比较方式, 生成的树形是不一样的
 	void _M_increment()
 	{
 		if(_m_node->_m_right)
@@ -487,15 +496,45 @@ _Rb_tree_rebalance_for_erase(_Rb_tree_node_base * _z,
 	return _y;
 }
 
+template <typename _Tp, typename _Alloc>
+struct _Rb_tree_base
+{
+	typedef _Alloc allocator_type;
+	allocator_type get_allocator()const
+	{
+		return allocator_type();
+	}
 
+	_Rb_tree_base(const allocator_type&):_m_header(nullptr)
+	{
+		_m_header = _M_get_node();
+	}
+	~_Rb_tree_base()
+	{
+		_M_put_node(_m_header);
+	}
 
+protected:
+	_Rb_tree_node<_Tp> *_m_header;
 
+	typedef simple_alloc<_Rb_tree_node<_Tp>, _Alloc> _Alloc_type;
+
+	_Rb_tree_node<_Tp>* _M_get_node()
+	{
+		return _Alloc_type::allocate(1);
+	}
+
+	void _M_put_node(_Rb_tree_node<_Tp> *_p)
+	{
+		_Alloc_type::deallocate(_p);
+	}
+};
 
 template<typename _Key, typename _Value, typename _KeyOfValue,
 		 typename _Compare, typename _Alloc = alloc>
-class _Rb_tree
+class _Rb_tree : protected _Rb_tree_base<_Value, _Alloc>
 {
-	typedef simple_alloc<_Rb_tree_node<_Value>, _Alloc> _Alloc_type;
+	typedef _Rb_tree_base<_Value, _Alloc> _Base;
 protected:
 	typedef _Rb_tree_node_base* _Base_ptr;
 	typedef _Rb_tree_node<_Value> _Rb_tree_node;
@@ -510,17 +549,14 @@ public:
 	typedef _Rb_tree_node*			_Link_type;
 	typedef size_t					size_type;
 	typedef ptrdiff_t				difference_type;
-	//std::_Identity<>
-protected:
-	_Rb_tree_node* _M_get_node()
+	
+	typedef typename _Base::allocator_type allocator_type;
+	allocator_type get_allocator()const
 	{
-		return _Alloc_type::allocate(1);
-	}
-	void _M_put_node(_Rb_tree_node *_p)
-	{
-		_Alloc_type::deallocate(_p);
+		return allocator_type();
 	}
 
+protected:
 	_Link_type _M_create_node(const value_type &_val)
 	{
 		_Link_type _tmp = _M_get_node();
@@ -528,6 +564,7 @@ protected:
 		return _tmp;
 	}
 
+	// 拷贝节点的值和颜色
 	_Link_type _M_clone_node(_Link_type _x)
 	{
 		_Link_type _tmp = _M_create_node(_x->_m_value_field);
@@ -544,7 +581,15 @@ protected:
 	}
 
 protected:
-	_Rb_tree_node *_m_header;
+	using _Base::_M_put_node;
+	using _Base::_M_get_node;
+
+	// 红黑树的header节点不等同于它的root节点, 设计该节点主要是为了处理边界情况
+	// 该节点的父节点会指向root节点, 左子树节点指向leftmost(不一定是最小值所在的位置, 视传入的比较方法决定)
+	// 右子树节点指向rightmost
+	// [begin, end) --> [leftmost, header)
+	using _Base::_m_header;
+
 	size_type _m_node_count;
 	_Compare _m_key_compare;
 
@@ -626,18 +671,26 @@ protected:
 public:
 	typedef _Rb_tree_iterator<value_type, reference, pointer>	iterator;
 	typedef _Rb_tree_iterator<value_type, const_reference, const_pointer> const_iterator;
+	typedef reverse_iterator<const_iterator> const_reverse_iterator;
+	typedef reverse_iterator<iterator> reverse_iterator;
 
-	_Rb_tree():_m_node_count(0), _m_key_compare()
+	_Rb_tree():_Base(allocator_type()), _m_node_count(0), _m_key_compare()
 	{
-		_m_header = _M_get_node();
 		_M_empty_initialize();
 	}
-	_Rb_tree(const _Compare& _comp) :_m_node_count(0), _m_key_compare(_comp)
-	{
-		_m_header = _M_get_node();
+	_Rb_tree(const _Compare& _comp) :_Base(allocator_type()), _m_node_count(0), _m_key_compare(_comp)
+	{	
 		_M_empty_initialize();
 	}
-	_Rb_tree(const _Rb_tree& _x) :_m_node_count(0), _m_key_compare(_x._m_key_compare)
+
+	_Rb_tree(const _Compare& _comp, allocator_type&_a) :_Base(_a), 
+				_m_node_count(0), _m_key_compare(_comp)
+	{
+		_M_empty_initialize();
+	}
+
+	_Rb_tree(const _Rb_tree& _x) :_Base(_x.get_allocator()),
+				_m_node_count(0), _m_key_compare(_x._m_key_compare)
 	{
 		if(_x._M_root() == nullptr)
 		{
@@ -655,7 +708,6 @@ public:
 	~_Rb_tree()
 	{
 		clear();
-		_M_put_node(_m_header);
 	}
 
 	_Rb_tree<_Key, _Value, _KeyOfValue, _Compare, _Alloc> &
@@ -695,6 +747,23 @@ public:
 	{
 		return _m_header;
 	}
+	reverse_iterator rbegin()
+	{
+		return reverse_iterator(end());
+	}
+	const_reverse_iterator rbegin() const
+	{
+		return const_reverse_iterator(end());
+	}
+	reverse_iterator rend()
+	{
+		return reverse_iterator(begin());
+	}
+	const_reverse_iterator rend() const
+	{
+		return const_reverse_iterator(begin());
+	}
+
 	bool empty()const
 	{
 		return _m_node_count == 0;
@@ -729,6 +798,8 @@ public:
 public:
 	pair<iterator, bool> insert_unique(const value_type& _val);
 	iterator insert_unique(iterator _position, const value_type& _val);
+	void insert_unique(const value_type* _first, const value_type* _last);
+	void insert_unique(const_iterator _first, const_iterator _last);
 
 	iterator insert_equal(const value_type _x);
 	iterator insert_equal(iterator _position, const value_type &_val);
@@ -885,7 +956,7 @@ void _Rb_tree<_Key, _Value, _KeyOfValue, _Compare, _Alloc>::_M_erase(_Link_type 
 
 template <typename _Key, typename _Value, typename _KeyOfValue, typename _Compare, typename _Alloc>
 pair<typename _Rb_tree<_Key, _Value, _KeyOfValue, _Compare, _Alloc>::iterator, bool> 
-_Rb_tree<_Key, _Value, _KeyOfValue, _Compare, _Alloc>::insert_unique(const value_type& _val)
+_Rb_tree<_Key, _Value, _KeyOfValue, _Compare, _Alloc>::insert_unique(const _Value& _val)
 {
 	_Link_type _y = _m_header;
 	_Link_type _x = _M_root();
@@ -945,6 +1016,22 @@ _Rb_tree<_Key, _Value, _KeyOfValue, _Compare, _Alloc>::insert_unique(iterator _p
 		else
 			return insert_unique(_val).first;
 	}
+}
+
+template <typename _Key, typename _Value, typename _KeyOfValue, typename _Compare, typename _Alloc>
+void _Rb_tree<_Key, _Value, _KeyOfValue, _Compare, _Alloc>::
+insert_unique(const value_type* _first, const value_type* _last)
+{
+	for (; _first != _last; ++_first)
+		insert_unique(*_first);
+}
+
+template <typename _Key, typename _Value, typename _KeyOfValue, typename _Compare, typename _Alloc>
+void _Rb_tree<_Key, _Value, _KeyOfValue, _Compare, _Alloc>::
+insert_unique(const_iterator _first, const_iterator _last)
+{
+	for (; _first != _last; ++_first)
+		insert_unique(*_first);
 }
 
 template <typename _Key, typename _Value, typename _KeyOfValue, typename _Compare, typename _Alloc>
@@ -1033,7 +1120,6 @@ _Rb_tree<_Key, _Value, _KeyOfValue, _Compare, _Alloc>::find(const key_type& _key
 
 	iterator it = iterator(_y);
 	return (it == end() || _m_key_compare(_key, _S_key(it._m_node))) ? end() : it;
-	//return static_cast<iterator&>(const_cast<_Rb_tree&>(*this).find(_key));
 }
 
 template <typename _Key, typename _Value, typename _KeyOfValue, typename _Compare, typename _Alloc>

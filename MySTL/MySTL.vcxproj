@@ -125,6 +125,8 @@
     <ClInclude Include="iterator_base.h" />
     <ClInclude Include="list.h" />
     <ClInclude Include="map.h" />
+    <ClInclude Include="multimap.h" />
+    <ClInclude Include="multiset.h" />
     <ClInclude Include="pair.h" />
     <ClInclude Include="queue.h" />
     <ClInclude Include="set.h" />

@@ -44,6 +44,10 @@ struct pair
 
 	pair():first(_T1()), second(_T2()){}
 	pair(const _T1& _a, const _T2 &_b):first(_a), second(_b){}
+
+	// 提供转换构造, 比如讲U1转换成const U1
+	template<typename U1, typename U2>
+	pair(const pair<U1, U2> &_p) : first(_p.first), second(_p.second){}
 };
 
 template<typename _T1, typename _T2>
